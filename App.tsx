@@ -1,49 +1,90 @@
-import * as React from 'react';
-import { Button, View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from "react";
+import { View, Text, Button } from "react-native";
+import { NavigationContainer, LinkingOptions, useLinkTo } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-function HomeScreen({ navigation }) {
+const linking: LinkingOptions = {
+  prefixes: ["/"],
+  config: {
+    screens: {
+      HomeStack: {
+        path: "stack",
+        initialRouteName: "Home",
+        screens: {
+          Home: "home",
+          Profile: {
+            path: "user/:id/:age",
+            parse: {
+              id: id => `there, ${id}`,
+              age: Number,
+            },
+            stringify: {
+              id: id => id.replace("there, ", ""),
+            },
+          },
+        },
+      },
+      Settings: "settings",
+    },
+  },
+};
+
+function Home({ navigation }) {
+  const linkTo = useLinkTo();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Home Screen</Text>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('Details')}
+        title="Go to Wojciech's profile"
+        onPress={() => linkTo("/stack/user/Wojciech/22")}
+      />
+      <Button
+        title="Go to unknown profile"
+        onPress={() => navigation.navigate("Profile")}
       />
     </View>
   );
 }
 
-function DetailsScreen({ navigation }) {
+function Profile({ route }) {
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Details Screen</Text>
-      <Button
-        title="Go to Details... again"
-        onPress={() => navigation.push('Details')}
-      />
-      <Button title="Go to Home" onPress={() => navigation.navigate('Home')} />
-      <Button title="Go back" onPress={() => navigation.goBack()} />
-      <Button
-        title="Go back to first screen in stack"
-        onPress={() => navigation.popToTop()}
-      />
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Hello {route.params?.id || "Unknown"}!</Text>
+      <Text>
+        Type of age parameter is{" "}
+        {route.params?.age ? typeof route.params.age : "undefined"}
+      </Text>
     </View>
   );
 }
 
-const Stack = createNativeStackNavigator();
-
-function App() {
+function Settings() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Details" component={DetailsScreen} />
-      </Stack.Navigator>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>This is the Settings Page.</Text>
+    </View>
+  );
+}
+
+const HomeStack = () => {
+  const MyStack = createStackNavigator();
+
+  return (
+    <MyStack.Navigator>
+      <MyStack.Screen name="Home" component={Home} />
+      <MyStack.Screen name="Profile" component={Profile} />
+    </MyStack.Navigator>
+  );
+};
+const MyTabs = createBottomTabNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer linking={linking}>
+      {/* <MyTabs.Navigator>
+        <MyTabs.Screen name="HomeStack" component={HomeStack} />
+        <MyTabs.Screen name="Settings" component={Settings} />
+      </MyTabs.Navigator> */}
     </NavigationContainer>
   );
 }
-
-export default App;
